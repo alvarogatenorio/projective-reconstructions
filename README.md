@@ -1,4 +1,5 @@
 ## Projective reconstructions
+All the content of this repository is part of the end of degree project "**Detección de Puntos Significativos en Imágenes para Reconstrucción 3D**" (Universidad Complutense de Madrid, 2018/2019). 
 ### reco.py
 To execute the file `reco.py` **OpenCV** must be installed with the option
 ```
