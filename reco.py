@@ -62,7 +62,7 @@ def compute_correspondences(descriptors1, descriptors2, keypoints1, keypoints2, 
     # Invariant: img1_points[i] is a matching point with img2_ponts[i].
     img1_points = []
     img2_points = []
-    good = []
+    good_matches = []
     # In each iteration selects the two DMatch objects corresponding to the same query descriptor.
     for match1, match2 in matches_lowe:
         # Applying Lowe's rule with 0.8 threshold (match1 is the nearest match).
@@ -72,12 +72,12 @@ def compute_correspondences(descriptors1, descriptors2, keypoints1, keypoints2, 
             queryidx resturns the index associated to match2 in descriptors2.
             pt returns the coordinates of the keypoint.
             '''
-            good.append([match1])
+            good_matches.append([match1])
             img1_points.append(keypoints1[match1.queryIdx].pt)
             img2_points.append(keypoints2[match1.trainIdx].pt)
     # Saving results.
     if img1 != [] and img2 != []:
-        output = cv.drawMatchesKnn(img1, keypoints1, img2, keypoints2, good, None, flags = 2)
+        output = cv.drawMatchesKnn(img1, keypoints1, img2, keypoints2, good_matches, None, flags = 2)
         plt.imsave('matches.png', output)
     # Casting data to int32.
     return np.int32(img1_points), np.int32(img2_points)
@@ -131,6 +131,10 @@ def compute_fundamental_matrix(img1_points, img2_points, img1 = [], img2 = []):
         draw_epilines(img2, lines_img2, img2_points, name = 'epilines2.png')
     return F, img1_points.T, img2_points.T, epipole1, epipole2
 
+'''
+Based on:
+https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_calib3d/py_epipolar_geometry/py_epipolar_geometry.html#epipolar-geometry
+'''
 def draw_epilines(img, lines, points, epipole = [], name = 'epilines.png'):
     # Changing color scale.
     img = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
@@ -143,7 +147,6 @@ def draw_epilines(img, lines, points, epipole = [], name = 'epilines.png'):
         # Point in the line with the maximum x-coordinate.
         x2, y2 = [columns, int(-(line[2] + line[0] * columns) / line[1])]
         img = cv.line(img, (x1, y1), (x2, y2), (0,255,0), 1)
-        # img = cv.circle(img, tuple(point), 5, (0,255,0), -1)
     if epipole != []:
         img = cv.circle(img, tuple(epipole), 5, (0,255,0), -1)
     # Saving result
@@ -190,8 +193,9 @@ if __name__ == '__main__':
     img1_points, img2_points = compute_correspondences(descriptors1, descriptors2, keypoints1, keypoints2, img1 = img1, img2 = img2)
     F, img1_points, img2_points, epipole1, epipole2 = compute_fundamental_matrix(img1_points, img2_points, img1 = img1, img2 = img2)
     p1, p2 = compute_cameras(F, epipole2)
-    #x = cv.triangulatePoints(p1, p2, img1_points, img1_points) #(BROKEN)
+    #x = cv.triangulatePoints(p1, p2, img1_points, img1_points) # (BROKEN)
     x = triangulate(p1, p2, img1_points, img2_points).T
+    # Avoiding 0 divisions
     x = x[:, x[3] != 0]
     x = (x/x[3])[:3]
     v = pptk.viewer(x)
