@@ -13,11 +13,14 @@ def load_images(name1, name2):
 '''
 Computes keypoints of one image using the SURF algorithm. Based on:
 https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_surf_intro/py_surf_intro.html
+
+Default values:
+The octave number is 4, in each octave 2 iterations are computed, extended 128-dimensional descriptors are returned.
 '''
 def compute_keypoints(img, threshold):
     # Creates a SURF object with the given hessian threshold.
     surf = cv.xfeatures2d.SURF_create(threshold)
-    # Compute key points and descriptors of the image.
+    # Compute key points and descriptors of the image (no mask provided).
     keypoints, descriptors = surf.detectAndCompute(img, None)
     # Saving results.
     output = cv.drawKeypoints(img, keypoints, None, (255, 0, 0), 4)
@@ -28,16 +31,19 @@ def compute_keypoints(img, threshold):
 '''
 Computes keypoints of two images using the SURF algorithm. Based on:
 https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_surf_intro/py_surf_intro.html
+
+Default values:
+The octave number is 4, in each octave 2 iterations are computed, extended 128-dimensional descriptors are returned.
 '''
 def compute_keypoints(img1, img2, threshold):
     # Creates a SURF object with the given hessian threshold.
     surf = cv.xfeatures2d.SURF_create(threshold)
-    # Compute key points and descriptors of each image.
+    # Compute key points and descriptors of each image (no mask provided).
     keypoints1, descriptors1 = surf.detectAndCompute(img1, None)
     keypoints2, descriptors2 = surf.detectAndCompute(img2, None)
     # Saving results.
-    output1 = cv.drawKeypoints(img1, keypoints1, None, (255,0,0), 4)
-    output2 = cv.drawKeypoints(img2, keypoints2, None, (255,0,0), 4)
+    output1 = cv.drawKeypoints(img1, keypoints1, None, (255, 0, 0), 4)
+    output2 = cv.drawKeypoints(img2, keypoints2, None, (255, 0, 0), 4)
     plt.imsave('key1.png', output1)
     plt.imsave('key2.png', output2)
     return keypoints1, descriptors1, keypoints2, descriptors2
@@ -124,31 +130,31 @@ def compute_fundamental_matrix(img1_points, img2_points, img1 = [], img2 = []):
     # Computing the epipole in the first image.
     epipole1 = np.cross(lines_img1[0], lines_img1[1]).flatten()
     if img1 != []:
-        draw_epilines(img1, lines_img1, img1_points, name = 'epilines1.png')
+        draw_epilines(img1, lines_img1, name = 'epilines1.png')
     # Compting the epipole in the second image.
     epipole2 = np.cross(lines_img2[0], lines_img2[1]).flatten()
     if img2 != []:
-        draw_epilines(img2, lines_img2, img2_points, name = 'epilines2.png')
+        draw_epilines(img2, lines_img2, name = 'epilines2.png')
     return F, img1_points.T, img2_points.T, epipole1, epipole2
 
 '''
 Based on:
 https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_calib3d/py_epipolar_geometry/py_epipolar_geometry.html#epipolar-geometry
 '''
-def draw_epilines(img, lines, points, epipole = [], name = 'epilines.png'):
+def draw_epilines(img, lines, epipole = [], name = 'epilines.png'):
     # Changing color scale.
     img = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
     columns = img.shape[1]
-    for line, point in zip(lines, points):
+    for line in lines:
         # a * x + b * y + c = 0
         line = line.flatten()
         # Point in the line with 0 x-coordinate.
         x1, y1 = [0, int(-line[2] / line[1])]
         # Point in the line with the maximum x-coordinate.
         x2, y2 = [columns, int(-(line[2] + line[0] * columns) / line[1])]
-        img = cv.line(img, (x1, y1), (x2, y2), (0,255,0), 1)
+        img = cv.line(img, (x1, y1), (x2, y2), (0, 255, 0), 1)
     if epipole != []:
-        img = cv.circle(img, tuple(epipole), 5, (0,255,0), -1)
+        img = cv.circle(img, tuple(epipole), 5, (0, 255, 0), -1)
     # Saving result
     plt.imsave(name, img)
     return img
